@@ -61,4 +61,4 @@ Mattey Banana is a specialized web application designed to bridge the gap betwee
 -   [ ] **Advanced Scaling:** User-defined DPI and physical dimension settings.
 
 ---
-Built with 💛 for the CNC community.
+Built with 💛 for the vector community.
