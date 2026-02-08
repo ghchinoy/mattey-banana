@@ -33,20 +33,20 @@ Mattey Banana is a specialized web application designed to bridge the gap betwee
 ### Installation
 
 1.  **Clone the repo**
-2.  **Setup Environment:**
-    Create a `frontend/.env` file based on `frontend/.env.example` and add your Gemini API key.
-3.  **Build the WASM module:**
+2.  **Build the WASM module:**
     ```bash
     cd wasm
     cargo build --target wasm32-unknown-unknown
     wasm-bindgen target/wasm32-unknown-unknown/debug/matte_wasm.wasm --out-dir ../frontend/src/wasm --target web
     ```
-4.  **Run the Frontend:**
+3.  **Run the Frontend:**
     ```bash
     cd frontend
     npm install
     npm run dev
     ```
+4.  **Configure API Key:**
+    Open the application in your browser and enter your Gemini API key in the **AI Assistant** tab. It will be securely stored in your browser's IndexedDB.
 
 ## 🌐 Deployment
 
