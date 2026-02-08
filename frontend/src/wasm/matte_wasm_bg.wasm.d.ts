@@ -2,6 +2,7 @@
 /* eslint-disable */
 export const memory: WebAssembly.Memory;
 export const export_to_fletcher_dxf: (a: number, b: number) => [number, number, number, number];
+export const export_to_svg: (a: number, b: number, c: number, d: number) => [number, number, number, number];
 export const greet: (a: number, b: number) => [number, number];
 export const trace_to_json: (a: number, b: number, c: number) => [number, number, number, number];
 export const __wbindgen_exn_store: (a: number) => void;

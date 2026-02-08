@@ -25,6 +25,8 @@ export enum ChromaSampling {
 
 export function export_to_fletcher_dxf(paths_json: string): string;
 
+export function export_to_svg(paths_json: string, width: number, height: number): string;
+
 export function greet(name: string): string;
 
 export function trace_to_json(image_bytes: Uint8Array, threshold: number): string;
@@ -34,6 +36,7 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly export_to_fletcher_dxf: (a: number, b: number) => [number, number, number, number];
+  readonly export_to_svg: (a: number, b: number, c: number, d: number) => [number, number, number, number];
   readonly greet: (a: number, b: number) => [number, number];
   readonly trace_to_json: (a: number, b: number, c: number) => [number, number, number, number];
   readonly __wbindgen_exn_store: (a: number) => void;

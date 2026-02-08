@@ -5,28 +5,36 @@ import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
 import '@material/web/button/filled-button.js';
 
+import { effect } from '@preact/signals-core';
+import { appState } from './state';
+import '@material/web/progress/linear-progress.js';
+
 @customElement('prompt-assistant')
 export class PromptAssistant extends LitElement {
   @state()
   private prompt = '';
 
-  private templates = [
-    { label: 'Organic', text: 'High-contrast black and white stencil of a [SUBJECT], solid black silhouette on a pure white background, clean continuous outlines, no shading, minimal internal detail, vector style.' },
-    { label: 'Geometric', text: 'Geometric Art Deco [SUBJECT], thick black lines on white background, symmetrical patterns, interconnected paths suitable for a CNC plotter, no textures, high resolution.' },
-    { label: 'Text', text: 'Stylized word "[SUBJECT]" in a bold stencil font where all letters are connected, thick lines, pure black and white, no drop shadows, centered on a white canvas.' }
-  ];
-
-  private _applyTemplate(text: string) {
-    this.prompt = text;
+  constructor() {
+    super();
+    effect(() => {
+      this.requestUpdate();
+    });
   }
+  
+  // ... (templates array)
 
   render() {
+    const isGenerating = appState.generating.value;
+
     return html`
       <div class="assistant">
         <h3>Prompt Assistant</h3>
+        
+        <md-linear-progress .indeterminate=${isGenerating} ?hidden=${!isGenerating}></md-linear-progress>
+
         <md-chip-set>
           ${this.templates.map(t => html`
-            <md-filter-chip label="${t.label}" @click=${() => this._applyTemplate(t.text)}></md-filter-chip>
+            <md-filter-chip label="${t.label}" ?disabled=${isGenerating} @click=${() => this._applyTemplate(t.text)}></md-filter-chip>
           `)}
         </md-chip-set>
         
@@ -34,11 +42,16 @@ export class PromptAssistant extends LitElement {
           label="Your Prompt"
           type="textarea"
           .value=${this.prompt}
+          ?disabled=${isGenerating}
           @input=${(e: any) => this.prompt = e.target.value}
           rows="3"
         ></md-outlined-text-field>
 
-        <md-filled-button @click=${this._onGenerate}>Generate Image</md-filled-button>
+        <md-filled-button 
+          ?disabled=${isGenerating || !this.prompt} 
+          @click=${this._onGenerate}>
+          ${isGenerating ? 'Generating...' : 'Generate Image'}
+        </md-filled-button>
       </div>
     `;
   }

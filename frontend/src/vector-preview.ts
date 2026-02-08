@@ -2,7 +2,9 @@ import { LitElement, html, css, svg } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { effect } from '@preact/signals-core';
 import { appState } from './state';
-import { trace_to_json, export_to_fletcher_dxf } from './wasm/matte_wasm.js';
+import { trace_to_json, export_to_fletcher_dxf, export_to_svg } from './wasm/matte_wasm.js';
+import '@material/web/tabs/tabs.js';
+import '@material/web/tabs/primary-tab.js';
 
 @customElement('vector-preview')
 export class VectorPreview extends LitElement {
@@ -11,6 +13,9 @@ export class VectorPreview extends LitElement {
 
   @state()
   private threshold = 128;
+
+  @state()
+  private format: 'dxf' | 'svg' = 'dxf';
 
   constructor() {
     super();
@@ -35,60 +40,113 @@ export class VectorPreview extends LitElement {
 
   private async _handleDownload() {
     if (this.paths.length === 0) return;
-    const dxf = export_to_fletcher_dxf(JSON.stringify(this.paths));
-    const blob = new Blob([dxf], { type: 'application/dxf' });
+    
+    let content: string;
+    let filename: string;
+    let type: string;
+
+    if (this.format === 'dxf') {
+      content = export_to_fletcher_dxf(JSON.stringify(this.paths));
+      filename = 'design.dxf';
+      type = 'application/dxf';
+    } else {
+      // Assuming 1024x1024 for now
+      content = export_to_svg(JSON.stringify(this.paths), 1024, 1024);
+      filename = 'design.svg';
+      type = 'image/svg+xml';
+    }
+
+    const blob = new Blob([content], { type });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'design.dxf';
+    a.download = filename;
     a.click();
     URL.revokeObjectURL(url);
   }
 
   render() {
     if (!appState.selectedImage.value) {
-      return html`<p>Select an image to preview vectors</p>`;
+      return html`<p class="empty-state">Select an image to preview vectors</p>`;
     }
 
     return html`
       <div class="preview-container">
         <h3>Vector Preview</h3>
-        <svg viewBox="0 0 1024 1024">
-          ${this.paths.map(path => svg`
-            <polyline points="${path.map(p => p.join(',')).join(' ')}" 
-                      fill="none" stroke="black" stroke-width="2" />
-          `)}
-        </svg>
+        <div class="svg-frame">
+          <svg viewBox="0 0 1024 1024">
+            ${this.paths.map(path => svg`
+              <polyline points="${path.map(p => p.join(',')).join(' ')}" 
+                        fill="none" stroke="black" stroke-width="2" />
+            `)}
+          </svg>
+        </div>
         
         <div class="controls">
-          <label>Threshold: ${this.threshold}</label>
+          <label>Threshold (Detail): ${this.threshold}</label>
           <input type="range" min="0" max="255" .value=${this.threshold} 
-                 @input=${(e: any) => { this.threshold = e.target.value; this._updatePreview(appState.selectedImage.value!.url); }}>
+                 @input=${(e: any) => { this.threshold = parseInt(e.target.value); this._updatePreview(appState.selectedImage.value!.url); }}>
           
-          <md-filled-button @click=${this._handleDownload}>Download DXF</md-filled-button>
+          <div class="format-selection">
+            <md-tabs @change=${(e: any) => this.format = e.target.activeTabIndex === 0 ? 'dxf' : 'svg'}>
+              <md-primary-tab>DXF (CNC)</md-primary-tab>
+              <md-primary-tab>SVG (Vector)</md-primary-tab>
+            </md-tabs>
+          </div>
+
+          <md-filled-button @click=${this._handleDownload}>
+            Download ${this.format.toUpperCase()}
+          </md-filled-button>
         </div>
       </div>
     `;
   }
 
   static styles = css`
+    :host {
+      display: block;
+    }
+    .empty-state {
+      text-align: center;
+      padding: 3rem;
+      border: 2px dashed var(--md-sys-color-outline-variant);
+      border-radius: 16px;
+      color: var(--md-sys-color-on-surface-variant);
+    }
     .preview-container {
-      margin-top: 2rem;
-      padding: 1rem;
-      border: 1px solid var(--md-sys-color-outline);
+      padding: 1.5rem;
+      border: 1px solid var(--md-sys-color-outline-variant);
+      border-radius: 24px;
+      background: var(--md-sys-color-surface-container-low);
+    }
+    .svg-frame {
+      background: white;
       border-radius: 12px;
+      padding: 1rem;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 1.5rem;
     }
     svg {
       width: 100%;
-      height: 300px;
-      background: white;
-      border: 1px solid #eee;
+      height: 400px;
     }
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 1rem;
-      margin-top: 1rem;
+      gap: 1.5rem;
+    }
+    .format-selection {
+      margin-bottom: 0.5rem;
+    }
+    md-filled-button {
+      width: 100%;
+    }
+    label {
+      font-weight: 500;
+      color: var(--md-sys-color-on-surface);
+    }
+    input[type="range"] {
+      width: 100%;
     }
   `;
 }

@@ -12,3 +12,5 @@ frontend/dist/
 
 # OS
 .DS_Store
+
+.commit.txt

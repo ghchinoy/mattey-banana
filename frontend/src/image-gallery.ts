@@ -34,21 +34,28 @@ export class ImageGallery extends LitElement {
     }
     .item {
       cursor: pointer;
-      border: 2px solid transparent;
-      border-radius: 8px;
+      border: 4px solid transparent;
+      border-radius: 12px;
       overflow: hidden;
-      transition: border-color 0.2s;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: var(--md-sys-elevation-level1);
     }
     .item:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--md-sys-elevation-level2);
       border-color: var(--md-sys-color-primary-container);
     }
     .item.selected {
       border-color: var(--md-sys-color-primary);
+      transform: scale(1.05);
+      box-shadow: var(--md-sys-elevation-level3);
+      z-index: 1;
     }
     img {
       width: 100%;
       height: 120px;
       object-fit: cover;
+      display: block;
     }
   `;
 }

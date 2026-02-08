@@ -9,8 +9,25 @@ export interface GeneratedImage {
 
 export const appState = {
   wasmInitialized: signal(false),
+  generating: signal(false),
   count: signal(0),
-  images: signal<GeneratedImage[]>([]),
+  images: signal<GeneratedImage[]>([
+    {
+      id: 'sample-1',
+      url: '/samples/gemini_20260207192859_0.png',
+      prompt: 'Sample Monstera Leaf'
+    },
+    {
+      id: 'sample-2',
+      url: '/samples/gemini_20260207195614_1.png',
+      prompt: 'Art Deco Cat'
+    },
+    {
+      id: 'sample-3',
+      url: '/samples/gemini_20260207195622_1.png',
+      prompt: 'Geometric Mandala'
+    }
+  ]),
   selectedImage: signal<GeneratedImage | null>(null),
   
   init: async () => {
