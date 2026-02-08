@@ -103,30 +103,28 @@ export class MyElement extends LitElement {
 
   render() {
     return html`
-      <header class="top-bar">
-        <div class="logo-area">
-          <span class="logo-emoji">🍌</span>
-          <div class="title-stack">
-            <h1>Mattey Banana</h1>
-            <p class="tagline">AI to vector generator</p>
-          </div>
-        </div>
-        <div class="actions">
-          <md-icon-button href="https://github.com/ghchinoy/mattey-banana" target="_blank">
-            <md-icon>code</md-icon>
-          </md-icon-button>
-          <md-icon-button @click=${() => this.showAbout = true}>
-            <md-icon>help_outline</md-icon>
-          </md-icon-button>
-        </div>
-      </header>
-
       <about-dialog 
         ?open=${this.showAbout} 
         @close=${() => this.showAbout = false}
       ></about-dialog>
 
       <main class="container">
+        <div class="header">
+          <div class="brand">MATTEY-BANANA</div>
+          <div style="flex-grow: 1"></div>
+          <div class="header-links">
+            <div class="tagline">
+              AI TO VECTOR GENERATOR
+              <a href="https://github.com/ghchinoy/mattey-banana" target="_blank">
+                <img src="https://img.shields.io/github/stars/ghchinoy/mattey-banana?style=social" alt="GitHub stars">
+              </a>
+              <button class="help-btn" @click=${() => this.showAbout = true}>?</button>
+            </div>
+            <a class="header-link" href="https://github.com/ghchinoy/mattey-banana" target="_blank">GitHub</a>
+            <a class="header-link" href="#" @click=${(e: Event) => { e.preventDefault(); this.showAbout = true; }}>About</a>
+          </div>
+        </div>
+
         <div class="card">
           <md-tabs @change=${(e: any) => this.activeTab = e.target.activeTabIndex}>
             <md-primary-tab ?active=${this.activeTab === 0}>Gallery</md-primary-tab>
@@ -150,51 +148,13 @@ export class MyElement extends LitElement {
 
   static styles = css`
     :host {
-      font-family: Roboto, system-ui, sans-serif;
+      font-family: system-ui, -apple-system, sans-serif;
       display: block;
       min-height: 100vh;
       color: var(--md-sys-color-on-surface);
       background-color: var(--md-sys-color-surface);
-    }
-
-    .top-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.5rem 1rem;
-      background-color: var(--md-sys-color-surface-container);
-      border-bottom: 1px solid var(--md-sys-color-outline-variant);
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-
-    .logo-area {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .logo-emoji {
-      font-size: 2rem;
-    }
-
-    .title-stack h1 {
-      margin: 0;
-      font-size: 1.25rem;
-      color: var(--md-sys-color-primary);
-    }
-
-    .tagline {
-      margin: 0;
-      font-size: 0.75rem;
-      color: var(--md-sys-color-on-surface-variant);
-      opacity: 0.8;
-    }
-
-    .actions {
-      display: flex;
-      gap: 0.5rem;
+      --accent: var(--md-sys-color-primary);
+      --border: var(--md-sys-color-outline-variant);
     }
 
     .container {
@@ -203,14 +163,76 @@ export class MyElement extends LitElement {
       padding: 2rem 1rem;
     }
 
+    .header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: baseline; 
+      border-bottom: 1px solid var(--border); 
+      padding-bottom: 0.5rem; 
+      margin-bottom: 2rem; 
+    }
+
+    .brand { 
+      font-size: 1.2rem; 
+      font-weight: bold; 
+      letter-spacing: -0.02rem;
+      color: var(--md-sys-color-on-surface);
+    }
+
+    .tagline { 
+      font-size: 0.8rem; 
+      color: var(--md-sys-color-on-surface-variant); 
+      display: flex; 
+      align-items: center; 
+      gap: 0.5rem; 
+    }
+
+    .header-links { 
+      display: flex; 
+      align-items: baseline; 
+      gap: 1.25rem; 
+    }
+
+    .header-link { 
+      font-size: 0.75rem; 
+      color: var(--accent); 
+      text-decoration: none; 
+      text-transform: uppercase; 
+      letter-spacing: 0.05rem; 
+    }
+
+    .header-link:hover { 
+      text-decoration: underline; 
+    }
+
+    .help-btn {
+      background: none; 
+      border: 1px solid var(--border); 
+      color: var(--md-sys-color-on-surface-variant);
+      border-radius: 50%; 
+      width: 18px; 
+      height: 18px; 
+      font-size: 0.6rem;
+      cursor: pointer; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center;
+      transition: 0.2s;
+    }
+
+    .help-btn:hover { 
+      border-color: var(--accent); 
+      color: var(--accent); 
+    }
+
     .card {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
       padding: 2rem;
-      border-radius: 28px;
+      border-radius: 8px;
       background-color: var(--md-sys-color-surface-container-low);
-      box-shadow: var(--md-sys-elevation-level1);
+      border: 1px solid var(--border);
     }
 
     .tab-content {
