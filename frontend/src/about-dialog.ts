@@ -53,6 +53,9 @@ export class AboutDialog extends LitElement {
   }
 
   static styles = css`
+    :host {
+      font-family: system-ui, -apple-system, sans-serif;
+    }
     section {
       margin-bottom: 1.5rem;
     }
