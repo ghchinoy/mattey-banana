@@ -47,25 +47,40 @@ export class MyElement extends LitElement {
   private async _handleGenerate(e: CustomEvent) {
     const { prompt, apiKey } = e.detail;
     appState.generating.value = true;
+    this.activeTab = 0; // Switch to gallery immediately to show progress
     
+    const placeholderId = `gen-${Date.now()}`;
+    const placeholder: any = {
+      id: placeholderId,
+      url: '',
+      prompt: prompt,
+      loading: true
+    };
+    
+    appState.images.value = [placeholder, ...appState.images.value];
+
     try {
       console.log('Generating image for:', prompt);
-      
       const imageUrl = await generateImage(prompt, apiKey);
 
       const newImage = {
-        id: `gen-${Date.now()}`,
+        id: placeholderId,
         url: imageUrl,
-        prompt: prompt
+        prompt: prompt,
+        loading: false
       };
 
-      appState.addImage(newImage);
+      // Replace placeholder with real image
+      appState.images.value = appState.images.value.map(img => 
+        img.id === placeholderId ? newImage : img
+      );
+      
       await saveUserImage(newImage);
       appState.selectImage(newImage);
-
-      this.activeTab = 0; // Switch back to gallery
     } catch (err: any) {
       console.error('Image generation failed:', err);
+      // Remove placeholder on failure
+      appState.images.value = appState.images.value.filter(img => img.id !== placeholderId);
       alert(`Failed to generate image: ${err.message}`);
     } finally {
       appState.generating.value = false;

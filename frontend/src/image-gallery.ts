@@ -4,6 +4,7 @@ import { effect } from '@preact/signals-core';
 import { appState } from './state';
 import { saveUserImage } from './db';
 import '@material/web/icon/icon.js';
+import '@material/web/progress/circular-progress.js';
 
 @customElement('image-gallery')
 export class ImageGallery extends LitElement {
@@ -49,9 +50,16 @@ export class ImageGallery extends LitElement {
         </div>
 
         ${appState.images.value.map(img => html`
-          <div class="item ${appState.selectedImage.value?.id === img.id ? 'selected' : ''}" 
-               @click=${() => appState.selectImage(img)}>
-            <img src="${img.url}" alt="${img.prompt}">
+          <div class="item ${appState.selectedImage.value?.id === img.id ? 'selected' : ''} ${img.loading ? 'loading' : ''}" 
+               @click=${() => !img.loading && appState.selectImage(img)}>
+            ${img.loading ? html`
+              <div class="loading-overlay">
+                <md-circular-progress indeterminate></md-circular-progress>
+                <span>Generating...</span>
+              </div>
+            ` : html`
+              <img src="${img.url}" alt="${img.prompt}">
+            `}
           </div>
         `)}
       </div>
@@ -102,6 +110,25 @@ export class ImageGallery extends LitElement {
       transform: scale(1.02);
       box-shadow: var(--md-sys-elevation-level3);
       z-index: 1;
+    }
+    .item.loading {
+      cursor: wait;
+      background: var(--md-sys-color-surface-container-high);
+      border-color: var(--md-sys-color-outline-variant);
+    }
+    .loading-overlay {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      gap: 0.5rem;
+      color: var(--md-sys-color-primary);
+      font-size: 0.75rem;
+      font-weight: 500;
+    }
+    md-circular-progress {
+      --md-circular-progress-size: 32px;
     }
     img {
       width: 100%;
