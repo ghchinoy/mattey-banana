@@ -9,6 +9,7 @@ import './prompt-assistant'
 import './image-gallery'
 import './vector-preview'
 import './about-dialog'
+import './error-toast'
 import '@material/web/tabs/tabs.js'
 import '@material/web/tabs/primary-tab.js'
 import '@material/web/iconbutton/icon-button.js'
@@ -95,7 +96,7 @@ export class MyElement extends LitElement {
       console.error('Image generation failed:', err);
       // Remove placeholder on failure
       appState.images.value = appState.images.value.filter(img => img.id !== placeholderId);
-      alert(`Failed to generate image: ${err.message}`);
+      appState.errorMessage.value = `Failed to generate image: ${err.message}`;
     } finally {
       appState.generating.value = false;
     }
@@ -107,6 +108,8 @@ export class MyElement extends LitElement {
         ?open=${this.showAbout} 
         @close=${() => this.showAbout = false}
       ></about-dialog>
+
+      <error-toast></error-toast>
 
       <main class="container">
         <div class="header">

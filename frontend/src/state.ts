@@ -11,6 +11,7 @@ export interface GeneratedImage {
 export const appState = {
   wasmInitialized: signal(false),
   generating: signal(false),
+  errorMessage: signal<string | null>(null),
   count: signal(0),
   images: signal<GeneratedImage[]>([
     {
