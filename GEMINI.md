@@ -1,6 +1,10 @@
-# Agent Instructions
+## Project Style & UX Mandates
 
-This project uses **bd** (beads) for issue tracking. Run `bd onboard` to get started.
+- **Stack Preference:** Favor **Lit WebComponents**, **Preact Signals**, and **Material 3** over heavy frameworks like React unless specified.
+- **Accessibility (A11Y):** Rigorously use Material 3 design tokens (e.g., `--md-sys-color-surface`) for all custom containers. Ensure high-contrast ratios (WCAG 2.1) between text and backgrounds.
+- **Expectation Management:** When implementing complex algorithms (like WASM tracing), clearly label UI outputs as "STUB" or "PLACEHOLDER" if the real logic is not yet complete.
+- **WASM Workflow:** Always check host `wasm-bindgen` CLI version and match it exactly in `Cargo.toml`.
+- **Branding:** Maintain the "Mattey Banana" branding and "AI to vector generator" tagline across all documentation and UI components.
 
 ## Quick Reference
 
