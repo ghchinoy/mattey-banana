@@ -8,8 +8,11 @@ import { generateImage } from './gemini'
 import './prompt-assistant'
 import './image-gallery'
 import './vector-preview'
+import './about-dialog'
 import '@material/web/tabs/tabs.js'
 import '@material/web/tabs/primary-tab.js'
+import '@material/web/iconbutton/icon-button.js'
+import '@material/web/icon/icon.js'
 
 /**
  * An example element.
@@ -21,6 +24,9 @@ import '@material/web/tabs/primary-tab.js'
 export class MyElement extends LitElement {
   @state()
   private activeTab = 0;
+
+  @state()
+  private showAbout = false;
 
   constructor() {
     super();
@@ -97,67 +103,120 @@ export class MyElement extends LitElement {
 
   render() {
     return html`
-      <div class="header">
-        <h1>Mattey Banana</h1>
-        <p>AI to vector generator</p>
-      </div>
-
-      <div class="card">
-        <md-tabs @change=${(e: any) => this.activeTab = e.target.activeTabIndex}>
-          <md-primary-tab ?active=${this.activeTab === 0}>Gallery</md-primary-tab>
-          <md-primary-tab ?active=${this.activeTab === 1}>AI Assistant</md-primary-tab>
-        </md-tabs>
-
-        <div class="tab-content">
-          <div ?hidden=${this.activeTab !== 0}>
-            <image-gallery></image-gallery>
-          </div>
-          <div ?hidden=${this.activeTab !== 1}>
-            <prompt-assistant @generate=${this._handleGenerate}></prompt-assistant>
+      <header class="top-bar">
+        <div class="logo-area">
+          <span class="logo-emoji">🍌</span>
+          <div class="title-stack">
+            <h1>Mattey Banana</h1>
+            <p class="tagline">AI to vector generator</p>
           </div>
         </div>
+        <div class="actions">
+          <md-icon-button href="https://github.com/ghchinoy/mattey-banana" target="_blank">
+            <md-icon>code</md-icon>
+          </md-icon-button>
+          <md-icon-button @click=${() => this.showAbout = true}>
+            <md-icon>help_outline</md-icon>
+          </md-icon-button>
+        </div>
+      </header>
 
-        <vector-preview></vector-preview>
-      </div>
+      <about-dialog 
+        ?open=${this.showAbout} 
+        @close=${() => this.showAbout = false}
+      ></about-dialog>
+
+      <main class="container">
+        <div class="card">
+          <md-tabs @change=${(e: any) => this.activeTab = e.target.activeTabIndex}>
+            <md-primary-tab ?active=${this.activeTab === 0}>Gallery</md-primary-tab>
+            <md-primary-tab ?active=${this.activeTab === 1}>AI Assistant</md-primary-tab>
+          </md-tabs>
+
+          <div class="tab-content">
+            <div ?hidden=${this.activeTab !== 0}>
+              <image-gallery></image-gallery>
+            </div>
+            <div ?hidden=${this.activeTab !== 1}>
+              <prompt-assistant @generate=${this._handleGenerate}></prompt-assistant>
+            </div>
+          </div>
+
+          <vector-preview></vector-preview>
+        </div>
+      </main>
     `
   }
 
   static styles = css`
     :host {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 2rem;
       font-family: Roboto, system-ui, sans-serif;
       display: block;
+      min-height: 100vh;
       color: var(--md-sys-color-on-surface);
       background-color: var(--md-sys-color-surface);
     }
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 1rem;
+      background-color: var(--md-sys-color-surface-container);
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      position: sticky;
+      top: 0;
+      z-index: 10;
     }
-    h1 {
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .logo-emoji {
+      font-size: 2rem;
+    }
+
+    .title-stack h1 {
       margin: 0;
+      font-size: 1.25rem;
       color: var(--md-sys-color-primary);
-      font-size: 3rem;
     }
+
+    .tagline {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--md-sys-color-on-surface-variant);
+      opacity: 0.8;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem 1rem;
+    }
+
     .card {
       display: flex;
       flex-direction: column;
       gap: 1.5rem;
       padding: 2rem;
-      border-radius: 24px;
-      background-color: var(--md-sys-color-surface-container);
-      color: var(--md-sys-color-on-surface-variant);
+      border-radius: 28px;
+      background-color: var(--md-sys-color-surface-container-low);
       box-shadow: var(--md-sys-elevation-level1);
     }
+
     .tab-content {
       margin-top: 0.5rem;
     }
-    p {
-      color: var(--md-sys-color-on-surface-variant);
-      line-height: 1.5;
-    }
+
     md-tabs {
       --md-tabs-container-color: transparent;
     }
