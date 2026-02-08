@@ -21,7 +21,15 @@ export class PromptAssistant extends LitElement {
     });
   }
   
-  // ... (templates array)
+  private templates = [
+    { label: 'Monstera', text: 'High contrast black and white silhouette of a Monstera leaf, minimal detail, vector style' },
+    { label: 'Cat', text: 'Art Deco geometric cat outline, black and white, thick lines' },
+    { label: 'Mandala', text: 'Simple geometric mandala pattern, black and white, vector ready' }
+  ];
+
+  private _applyTemplate(text: string) {
+    this.prompt = text;
+  }
 
   render() {
     const isGenerating = appState.generating.value;

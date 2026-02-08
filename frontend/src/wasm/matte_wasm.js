@@ -209,15 +209,17 @@ export function greet(name) {
 /**
  * @param {Uint8Array} image_bytes
  * @param {number} threshold
+ * @param {number} turd_size
+ * @param {number} smoothing
  * @returns {string}
  */
-export function trace_to_json(image_bytes, threshold) {
+export function trace_to_json(image_bytes, threshold, turd_size, smoothing) {
     let deferred3_0;
     let deferred3_1;
     try {
         const ptr0 = passArray8ToWasm0(image_bytes, wasm.__wbindgen_malloc);
         const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.trace_to_json(ptr0, len0, threshold);
+        const ret = wasm.trace_to_json(ptr0, len0, threshold, turd_size, smoothing);
         var ptr2 = ret[0];
         var len2 = ret[1];
         if (ret[3]) {

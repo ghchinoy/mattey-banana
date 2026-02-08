@@ -30,6 +30,13 @@ export const appState = {
   ]),
   selectedImage: signal<GeneratedImage | null>(null),
   
+  tracingSettings: signal({
+    threshold: 128,
+    turdSize: 10,
+    smoothing: 1.0,
+    hierarchical: true
+  }),
+
   init: async () => {
     if (!appState.wasmInitialized.value) {
       await initWasm();

@@ -12,9 +12,6 @@ export class VectorPreview extends LitElement {
   private paths: [number, number][][] = [];
 
   @state()
-  private threshold = 128;
-
-  @state()
   private format: 'dxf' | 'svg' = 'dxf';
 
   constructor() {
@@ -31,7 +28,13 @@ export class VectorPreview extends LitElement {
     try {
       const resp = await fetch(url);
       const bytes = await resp.arrayBuffer();
-      const json = trace_to_json(new Uint8Array(bytes), this.threshold);
+      const settings = appState.tracingSettings.value;
+      const json = trace_to_json(
+        new Uint8Array(bytes), 
+        settings.threshold,
+        settings.turdSize,
+        settings.smoothing
+      );
       this.paths = JSON.parse(json);
     } catch (e) {
       console.error('Tracing failed', e);
@@ -70,6 +73,8 @@ export class VectorPreview extends LitElement {
       return html`<p class="empty-state">Select an image to preview vectors</p>`;
     }
 
+    const settings = appState.tracingSettings.value;
+
     return html`
       <div class="preview-container">
         <h3>Vector Preview</h3>
@@ -83,9 +88,32 @@ export class VectorPreview extends LitElement {
         </div>
         
         <div class="controls">
-          <label>Threshold (Detail): ${this.threshold}</label>
-          <input type="range" min="0" max="255" .value=${this.threshold} 
-                 @input=${(e: any) => { this.threshold = parseInt(e.target.value); this._updatePreview(appState.selectedImage.value!.url); }}>
+          <div class="control-group">
+            <label>Threshold (Detail): ${settings.threshold}</label>
+            <input type="range" min="0" max="255" .value=${settings.threshold} 
+                   @input=${(e: any) => { 
+                     appState.tracingSettings.value = { ...settings, threshold: parseInt(e.target.value) };
+                     this._updatePreview(appState.selectedImage.value!.url); 
+                   }}>
+          </div>
+
+          <div class="control-group">
+            <label>Filter Noise (Turd Size): ${settings.turdSize}</label>
+            <input type="range" min="0" max="100" .value=${settings.turdSize} 
+                   @input=${(e: any) => { 
+                     appState.tracingSettings.value = { ...settings, turdSize: parseInt(e.target.value) };
+                     this._updatePreview(appState.selectedImage.value!.url); 
+                   }}>
+          </div>
+
+          <div class="control-group">
+            <label>Smoothing (Path Simplification): ${settings.smoothing.toFixed(1)}</label>
+            <input type="range" min="0" max="10" step="0.5" .value=${settings.smoothing} 
+                   @input=${(e: any) => { 
+                     appState.tracingSettings.value = { ...settings, smoothing: parseFloat(e.target.value) };
+                     this._updatePreview(appState.selectedImage.value!.url); 
+                   }}>
+          </div>
           
           <div class="format-selection">
             <md-tabs @change=${(e: any) => this.format = e.target.activeTabIndex === 0 ? 'dxf' : 'svg'}>
@@ -133,9 +161,15 @@ export class VectorPreview extends LitElement {
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
     .format-selection {
+      margin-top: 1rem;
       margin-bottom: 0.5rem;
     }
     md-filled-button {
@@ -144,6 +178,7 @@ export class VectorPreview extends LitElement {
     label {
       font-weight: 500;
       color: var(--md-sys-color-on-surface);
+      font-size: 0.9rem;
     }
     input[type="range"] {
       width: 100%;

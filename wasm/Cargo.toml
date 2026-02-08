@@ -15,5 +15,8 @@ vsvg = "0.1"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde-wasm-bindgen = "0.6"
+vtracer = "0.6"
+visioncortex = "0.8"
+kurbo = "0.9"
 getrandom = { version = "0.2", features = ["js"] }
 uuid = { version = "1.2", features = ["v4", "js"] }
