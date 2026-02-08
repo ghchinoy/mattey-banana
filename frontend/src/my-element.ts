@@ -2,7 +2,8 @@ import { LitElement, css, html } from 'lit'
 import { customElement, property, state } from 'lit/decorators.js'
 import { effect } from '@preact/signals-core'
 import { appState } from './state'
-import { getUserImages } from './db'
+import { getUserImages, saveUserImage } from './db'
+import { generateImage } from './gemini'
 
 import './prompt-assistant'
 import './image-gallery'
@@ -44,22 +45,31 @@ export class MyElement extends LitElement {
   docsHint = 'Click on the Vite and Lit logos to learn more'
 
   private async _handleGenerate(e: CustomEvent) {
-    const { prompt } = e.detail;
+    const { prompt, apiKey } = e.detail;
     appState.generating.value = true;
     
-    console.log('Generating image for:', prompt);
-    
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      console.log('Generating image for:', prompt);
+      
+      const imageUrl = await generateImage(prompt, apiKey);
 
-    appState.addImage({
-      id: Date.now().toString(),
-      url: 'samples/gemini_20260207192859_0.png',
-      prompt: prompt
-    });
+      const newImage = {
+        id: `gen-${Date.now()}`,
+        url: imageUrl,
+        prompt: prompt
+      };
 
-    appState.generating.value = false;
-    this.activeTab = 0; // Switch back to gallery
+      appState.addImage(newImage);
+      await saveUserImage(newImage);
+      appState.selectImage(newImage);
+
+      this.activeTab = 0; // Switch back to gallery
+    } catch (err: any) {
+      console.error('Image generation failed:', err);
+      alert(`Failed to generate image: ${err.message}`);
+    } finally {
+      appState.generating.value = false;
+    }
   }
 
   render() {
