@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 use dxf::{Drawing, entities::{Entity, EntityType, LwPolyline}, LwPolylineVertex};
-use vtracer::{Config, ColorMode, Hierarchical, PathSimplifyMode, ColorImage};
+use vtracer::{Config, ColorMode, Hierarchical, ColorImage};
+use visioncortex::PathSimplifyMode;
 
 #[wasm_bindgen]
 pub fn greet(name: &str) -> String {
