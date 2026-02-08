@@ -1,0 +1,14 @@
+# Project
+instructions/
+
+# Rust
+wasm/target/
+
+# Node
+node_modules/
+frontend/node_modules/
+dist/
+frontend/dist/
+
+# OS
+.DS_Store
