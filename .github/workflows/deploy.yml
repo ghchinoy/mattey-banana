@@ -29,7 +29,7 @@ jobs:
       - name: Get wasm-bindgen version
         id: wasm-bindgen-version
         run: |
-          VERSION=$(grep -A 1 "name = "wasm-bindgen"" wasm/Cargo.lock | grep "version =" | head -n 1 | cut -d '"' -f 2)
+          VERSION=$(awk '/\[\[package\]\]/ {p=0} /name = "wasm-bindgen"/ {p=1} p && /version =/ { print $3; exit }' wasm/Cargo.lock | tr -d '"')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Detected wasm-bindgen version: $VERSION"
 
