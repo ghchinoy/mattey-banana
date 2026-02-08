@@ -24,16 +24,18 @@ export async function generateImage(prompt: string, apiKey: string): Promise<str
   }
 
   const data = await response.json();
+  console.log('Gemini API Response:', data);
   
-  // The Gemini Image API returns the image as a base64 string in the response
-  // Assuming the structure based on standard Gemini 1.5 Pro / Image response patterns
-  // Note: Adjusting if the specific Nano Banana Pro API differs
-  const base64Image = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
-  const mimeType = data.candidates?.[0]?.content?.parts?.[0]?.inlineData?.mimeType || 'image/png';
+  // Try multiple common response paths for image data
+  const part = data.candidates?.[0]?.content?.parts?.[0];
+  const base64Image = part?.inlineData?.data || part?.data || part?.text;
+  const mimeType = part?.inlineData?.mimeType || 'image/png';
 
   if (!base64Image) {
+    console.error('Incomplete Gemini Response:', data);
     throw new Error('No image data received from Gemini');
   }
 
-  return `data:${mimeType};base64,${base64Image}`;
+  // If the API returned a full data URL or just the base64 string
+  return base64Image.startsWith('data:') ? base64Image : `data:${mimeType};base64,${base64Image}`;
 }

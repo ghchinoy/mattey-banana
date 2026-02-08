@@ -60,8 +60,9 @@ export class MyElement extends LitElement {
     appState.images.value = [placeholder, ...appState.images.value];
 
     try {
-      console.log('Generating image for:', prompt);
+      console.log('Starting image generation for:', prompt);
       const imageUrl = await generateImage(prompt, apiKey);
+      console.log('Image generation successful, length:', imageUrl.length);
 
       const newImage = {
         id: placeholderId,
@@ -70,13 +71,17 @@ export class MyElement extends LitElement {
         loading: false
       };
 
-      // Replace placeholder with real image
-      appState.images.value = appState.images.value.map(img => 
+      // Replace placeholder with real image by creating a fresh array reference
+      const updatedImages = appState.images.value.map(img => 
         img.id === placeholderId ? newImage : img
       );
+      appState.images.value = [...updatedImages];
       
+      console.log('Updated appState.images, saving to DB...');
       await saveUserImage(newImage);
+      
       appState.selectImage(newImage);
+      console.log('Selected new image');
     } catch (err: any) {
       console.error('Image generation failed:', err);
       // Remove placeholder on failure

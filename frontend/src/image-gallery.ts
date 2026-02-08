@@ -39,6 +39,7 @@ export class ImageGallery extends LitElement {
   }
 
   render() {
+    console.log('Rendering ImageGallery, images count:', appState.images.value.length);
     return html`
       <div class="gallery">
         <div class="item upload-tile" @click=${() => this.fileInput.click()}>
