@@ -35,16 +35,24 @@ This generates the following files in `frontend/src/wasm`:
 
 ## Data Interface
 
-### `trace_to_json(image_bytes: &[u8], threshold: u8) -> String`
+### `trace_to_json(image_bytes: &[u8], threshold: u8, turd_size: usize, smoothing: f64, is_spline: bool) -> Result<String, JsValue>`
 Converts a binary image (PNG/JPG) into a JSON string representing vector paths.
-- **Input**: Raw bytes of the image file.
-- **Output**: JSON string: `[[[x1, y1], [x2, y2], ...], ...]` (an array of paths, where each path is an array of points).
+- **Input**:
+  - `image_bytes`: Raw bytes of the image file.
+  - `threshold`: Brightness threshold (0-255).
+  - `turd_size`: Noise filter (minimum area of a path in pixels).
+  - `smoothing`: Simplification threshold (length threshold for path points).
+  - `is_spline`: If `true`, uses Bézier splines; if `false`, uses straight-line polygons.
+- **Output**: JSON string: `[[[x1, y1], [x2, y2], ...], ...]` (an array of flattened paths for preview).
 
-### `export_to_svg(paths_json: &str, width: f64, height: f64) -> String`
-Generates a string containing valid SVG XML.
+### `trace_to_svg(image_bytes: &[u8], threshold: u8, turd_size: usize, smoothing: f64, is_spline: bool) -> Result<String, JsValue>`
+Traces the image and returns a high-fidelity SVG string directly from the `vtracer` engine. Supports splines if `is_spline` is true.
 
-### `export_to_fletcher_dxf(paths_json: &str) -> String`
-Generates a string containing DXF (AutoCAD) data formatted specifically for Fletcher-compatible CNC machines.
+### `export_to_svg(paths_json: &str, width: f64, height: f64) -> Result<String, JsValue>`
+Generates a string containing valid SVG XML using the `evenodd` fill rule to support contour hierarchies.
+
+### `export_to_fletcher_dxf(paths_json: &str) -> Result<String, JsValue>`
+Generates a string containing DXF (AutoCAD) data formatted specifically for Fletcher-compatible CNC machines. Currently flattens all paths to `LwPolyline` entities.
 
 ## Extending the Module
 
