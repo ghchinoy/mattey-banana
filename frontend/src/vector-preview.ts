@@ -2,9 +2,11 @@ import { LitElement, html, css, svg } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { effect } from '@preact/signals-core';
 import { appState } from './state';
-import { trace_to_json, export_to_fletcher_dxf, export_to_svg } from './wasm/matte_wasm.js';
+import { trace_to_json, export_to_fletcher_dxf, trace_to_svg } from './wasm/matte_wasm.js';
 import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
 
 @customElement('vector-preview')
 export class VectorPreview extends LitElement {
@@ -33,7 +35,8 @@ export class VectorPreview extends LitElement {
         new Uint8Array(bytes), 
         settings.threshold,
         settings.turdSize,
-        settings.smoothing
+        settings.smoothing,
+        settings.mode === 'graphic'
       );
       this.paths = JSON.parse(json);
     } catch (e) {
@@ -42,19 +45,30 @@ export class VectorPreview extends LitElement {
   }
 
   private async _handleDownload() {
-    if (this.paths.length === 0) return;
+    const selected = appState.selectedImage.value;
+    if (!selected || this.paths.length === 0) return;
     
     let content: string;
     let filename: string;
     let type: string;
+
+    const settings = appState.tracingSettings.value;
 
     if (this.format === 'dxf') {
       content = export_to_fletcher_dxf(JSON.stringify(this.paths));
       filename = 'design.dxf';
       type = 'application/dxf';
     } else {
-      // Assuming 1024x1024 for now
-      content = export_to_svg(JSON.stringify(this.paths), 1024, 1024);
+      // For SVG, we use the direct trace_to_svg for maximum quality (Béziers)
+      const resp = await fetch(selected.url);
+      const bytes = await resp.arrayBuffer();
+      content = trace_to_svg(
+        new Uint8Array(bytes),
+        settings.threshold,
+        settings.turdSize,
+        settings.smoothing,
+        settings.mode === 'graphic'
+      );
       filename = 'design.svg';
       type = 'image/svg+xml';
     }
@@ -89,6 +103,23 @@ export class VectorPreview extends LitElement {
         
         <div class="controls">
           <div class="control-group">
+            <md-outlined-select label="Trace Mode" 
+              @change=${(e: any) => {
+                appState.tracingSettings.value = { ...settings, mode: e.target.value };
+                this._updatePreview(appState.selectedImage.value!.url);
+              }}>
+              <md-select-option value="cnc" ?selected=${settings.mode === 'cnc'}>
+                <div slot="headline">CNC (Polylines)</div>
+                <div slot="supporting-text">Straight lines only, high vertex count.</div>
+              </md-select-option>
+              <md-select-option value="graphic" ?selected=${settings.mode === 'graphic'}>
+                <div slot="headline">Graphic (Splines)</div>
+                <div slot="supporting-text">Smooth Bézier curves, smaller file size.</div>
+              </md-select-option>
+            </md-outlined-select>
+          </div>
+
+          <div class="control-group">
             <label>Threshold (Detail): ${settings.threshold}</label>
             <input type="range" min="0" max="255" .value=${settings.threshold} 
                    @input=${(e: any) => { 
@@ -107,7 +138,7 @@ export class VectorPreview extends LitElement {
           </div>
 
           <div class="control-group">
-            <label>Smoothing (Path Simplification): ${settings.smoothing.toFixed(1)}</label>
+            <label>Smoothing: ${settings.smoothing.toFixed(1)}</label>
             <input type="range" min="0" max="10" step="0.5" .value=${settings.smoothing} 
                    @input=${(e: any) => { 
                      appState.tracingSettings.value = { ...settings, smoothing: parseFloat(e.target.value) };

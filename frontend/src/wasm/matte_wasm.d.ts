@@ -29,14 +29,17 @@ export function export_to_svg(paths_json: string, width: number, height: number)
 
 export function greet(name: string): string;
 
-export function trace_to_json(image_bytes: Uint8Array, threshold: number, turd_size: number, smoothing: number): string;
+export function trace_to_json(image_bytes: Uint8Array, threshold: number, turd_size: number, smoothing: number, is_spline: boolean): string;
+
+export function trace_to_svg(image_bytes: Uint8Array, threshold: number, turd_size: number, smoothing: number, is_spline: boolean): string;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly greet: (a: number, b: number) => [number, number];
-  readonly trace_to_json: (a: number, b: number, c: number, d: number, e: number) => [number, number, number, number];
+  readonly trace_to_json: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number, number];
+  readonly trace_to_svg: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number, number, number];
   readonly export_to_svg: (a: number, b: number, c: number, d: number) => [number, number, number, number];
   readonly export_to_fletcher_dxf: (a: number, b: number) => [number, number, number, number];
   readonly __wbindgen_exn_store: (a: number) => void;

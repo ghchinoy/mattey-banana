@@ -35,7 +35,8 @@ export const appState = {
     threshold: 128,
     turdSize: 10,
     smoothing: 1.0,
-    hierarchical: true
+    hierarchical: true,
+    mode: 'cnc' as 'cnc' | 'graphic'
   }),
 
   init: async () => {
