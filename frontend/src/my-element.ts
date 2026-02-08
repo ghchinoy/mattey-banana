@@ -80,8 +80,11 @@ export class MyElement extends LitElement {
       console.log('Updated appState.images, saving to DB...');
       await saveUserImage(newImage);
       
-      appState.selectImage(newImage);
-      console.log('Selected new image');
+      // Explicitly trigger a small delay to let the DOM catch up if needed
+      setTimeout(() => {
+        appState.selectImage(newImage);
+        console.log('Selected new image');
+      }, 50);
     } catch (err: any) {
       console.error('Image generation failed:', err);
       // Remove placeholder on failure
