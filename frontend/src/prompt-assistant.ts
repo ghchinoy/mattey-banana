@@ -70,9 +70,7 @@ export class PromptAssistant extends LitElement {
           </md-outlined-text-field>
         </div>
 
-        <h3>Prompt Assistant</h3>
-        
-        <md-linear-progress .indeterminate=${isGenerating} ?hidden=${!isGenerating}></md-linear-progress>
+        <md-linear-progress ?indeterminate=${isGenerating} ?hidden=${!isGenerating}></md-linear-progress>
 
         <md-chip-set>
           ${this.templates.map(t => html`
