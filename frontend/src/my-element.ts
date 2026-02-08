@@ -110,17 +110,15 @@ export class MyElement extends LitElement {
 
       <main class="container">
         <div class="header">
-          <div class="brand">MATTEY-BANANA</div>
+          <div class="brand">Mattey Banana</div>
           <div style="flex-grow: 1"></div>
           <div class="header-links">
             <div class="tagline">
-              AI TO VECTOR GENERATOR
+              IN-BROWSER IMAGE TO VECTOR GENERATOR
               <a href="https://github.com/ghchinoy/mattey-banana" target="_blank">
                 <img src="https://img.shields.io/github/stars/ghchinoy/mattey-banana?style=social" alt="GitHub stars">
               </a>
-              <button class="help-btn" @click=${() => this.showAbout = true}>?</button>
             </div>
-            <a class="header-link" href="https://github.com/ghchinoy/mattey-banana" target="_blank">GitHub</a>
             <a class="header-link" href="#" @click=${(e: Event) => { e.preventDefault(); this.showAbout = true; }}>About</a>
           </div>
         </div>
