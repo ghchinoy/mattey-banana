@@ -2,7 +2,6 @@ use wasm_bindgen::prelude::*;
 use dxf::{Drawing, entities::{Entity, EntityType, LwPolyline}, LwPolylineVertex};
 use vtracer::{Config, ColorMode, Hierarchical};
 use visioncortex::{ColorImage, PathSimplifyMode};
-use kurbo::PathEl;
 
 #[wasm_bindgen]
 pub fn greet(name: &str) -> String {
@@ -10,64 +9,79 @@ pub fn greet(name: &str) -> String {
 }
 
 #[wasm_bindgen]
-pub fn trace_to_json(image_bytes: &[u8], threshold: u8, turd_size: usize, smoothing: f64) -> Result<String, JsValue> {
+pub fn trace_to_json(image_bytes: &[u8], threshold: u8, turd_size: usize, smoothing: f64, is_spline: bool) -> Result<String, JsValue> {
     let img = image::load_from_memory(image_bytes)
         .map_err(|e| JsValue::from_str(&format!("Failed to load image: {}", e)))?;
     
     let grayscale = img.to_luma8();
     let (width, height) = grayscale.dimensions();
 
-    // Use vtracer for high-quality tracing
     let mut config = Config::default();
     config.color_mode = ColorMode::Binary;
     config.filter_speckle = turd_size;
-    config.mode = PathSimplifyMode::Polygon; 
+    config.mode = if is_spline { PathSimplifyMode::Spline } else { PathSimplifyMode::Polygon }; 
     config.hierarchical = Hierarchical::Stacked;
-    // For smoothing, vtracer has corner_threshold and length_threshold
     config.length_threshold = smoothing;
 
     let mut pixels = Vec::new();
     for pixel in grayscale.pixels() {
         let val = if pixel.0[0] < threshold { 0 } else { 255 };
-        pixels.push(val); // R
-        pixels.push(val); // G
-        pixels.push(val); // B
-        pixels.push(255); // A
+        pixels.push(val); pixels.push(val); pixels.push(val); pixels.push(255);
     }
 
-    let v_img = ColorImage {
-        pixels,
-        width: width as usize,
-        height: height as usize,
-    };
+    let v_img = ColorImage { pixels, width: width as usize, height: height as usize };
 
     let svg_file = vtracer::convert(v_img, config)
         .map_err(|e| JsValue::from_str(&format!("VTracer failed: {}", e)))?;
     let svg_str = format!("{}", svg_file);
 
     let mut paths: Vec<Vec<(f64, f64)>> = Vec::new();
-    
     let doc = vsvg::Document::from_string(&svg_str, false)
         .map_err(|e| JsValue::from_str(&format!("VSVG failed to parse: {}", e)))?;
 
     for layer in doc.layers.values() {
         for path in &layer.paths {
-            let mut points = Vec::new();
-            for el in path.data.iter() {
-                match el {
-                    PathEl::MoveTo(p) | PathEl::LineTo(p) => {
-                        points.push((p.x, p.y));
-                    }
-                    _ => {}
+            // For the JSON preview, we always flatten so the frontend can draw it easily
+            // Tolerance of 0.1 provides a very accurate polyline representation
+            for flattened in path.flatten(0.1) {
+                let points: Vec<(f64, f64)> = flattened.data.points().iter().map(|p| (p.x(), p.y())).collect();
+                if !points.is_empty() {
+                    paths.push(points);
                 }
-            }
-            if !points.is_empty() {
-                paths.push(points);
             }
         }
     }
 
     serde_json::to_string(&paths).map_err(|e| JsValue::from_str(&e.to_string()))
+}
+
+#[wasm_bindgen]
+pub fn trace_to_svg(image_bytes: &[u8], threshold: u8, turd_size: usize, smoothing: f64, is_spline: bool) -> Result<String, JsValue> {
+    let img = image::load_from_memory(image_bytes)
+        .map_err(|e| JsValue::from_str(&format!("Failed to load image: {}", e)))?;
+    
+    let grayscale = img.to_luma8();
+    let (width, height) = grayscale.dimensions();
+
+    let mut config = Config::default();
+    config.color_mode = ColorMode::Binary;
+    config.filter_speckle = turd_size;
+    config.mode = if is_spline { PathSimplifyMode::Spline } else { PathSimplifyMode::Polygon }; 
+    config.hierarchical = Hierarchical::Stacked;
+    config.length_threshold = smoothing;
+
+    let mut pixels = Vec::new();
+    for pixel in grayscale.pixels() {
+        let val = if pixel.0[0] < threshold { 0 } else { 255 };
+        pixels.push(val); pixels.push(val); pixels.push(val); pixels.push(255);
+    }
+
+    let v_img = ColorImage { pixels, width: width as usize, height: height as usize };
+
+    let svg_file = vtracer::convert(v_img, config)
+        .map_err(|e| JsValue::from_str(&format!("VTracer failed: {}", e)))?;
+    
+    Ok(format!("{}", svg_file))
 }
 
 #[wasm_bindgen]
