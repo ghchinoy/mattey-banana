@@ -11,6 +11,7 @@
   "dependencies": {
     "@material/web": "^2.4.1",
     "@preact/signals-core": "^1.13.0",
+    "idb": "^8.0.3",
     "lit": "^3.3.1"
   },
   "devDependencies": {

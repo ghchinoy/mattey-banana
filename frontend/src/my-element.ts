@@ -1,11 +1,15 @@
 import { LitElement, css, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 import { effect } from '@preact/signals-core'
 import { appState } from './state'
+import { getUserImages, saveUserImage } from './db'
+import { generateImage } from './gemini'
 
 import './prompt-assistant'
 import './image-gallery'
 import './vector-preview'
+import '@material/web/tabs/tabs.js'
+import '@material/web/tabs/primary-tab.js'
 
 /**
  * An example element.
@@ -15,12 +19,23 @@ import './vector-preview'
  */
 @customElement('my-element')
 export class MyElement extends LitElement {
+  @state()
+  private activeTab = 0;
+
   constructor() {
     super();
-    appState.init();
+    this._init();
     effect(() => {
       this.requestUpdate();
     });
+  }
+
+  private async _init() {
+    await appState.init();
+    const userImages = await getUserImages();
+    if (userImages && userImages.length > 0) {
+      userImages.forEach(img => appState.addImage(img));
+    }
   }
 
   /**
@@ -30,21 +45,54 @@ export class MyElement extends LitElement {
   docsHint = 'Click on the Vite and Lit logos to learn more'
 
   private async _handleGenerate(e: CustomEvent) {
-    const { prompt } = e.detail;
+    const { prompt, apiKey } = e.detail;
     appState.generating.value = true;
+    this.activeTab = 0; // Switch to gallery immediately to show progress
     
-    console.log('Generating image for:', prompt);
+    const placeholderId = `gen-${Date.now()}`;
+    const placeholder: any = {
+      id: placeholderId,
+      url: '',
+      prompt: prompt,
+      loading: true
+    };
     
-    // Simulate API delay
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    appState.images.value = [placeholder, ...appState.images.value];
 
-    appState.addImage({
-      id: Date.now().toString(),
-      url: '/samples/gemini_20260207192859_0.png',
-      prompt: prompt
-    });
+    try {
+      console.log('Starting image generation for:', prompt);
+      const imageUrl = await generateImage(prompt, apiKey);
+      console.log('Image generation successful, length:', imageUrl.length);
 
-    appState.generating.value = false;
+      const newImage = {
+        id: placeholderId,
+        url: imageUrl,
+        prompt: prompt,
+        loading: false
+      };
+
+      // Replace placeholder with real image by creating a fresh array reference
+      const updatedImages = appState.images.value.map(img => 
+        img.id === placeholderId ? newImage : img
+      );
+      appState.images.value = [...updatedImages];
+      
+      console.log('Updated appState.images, saving to DB...');
+      await saveUserImage(newImage);
+      
+      // Explicitly trigger a small delay to let the DOM catch up if needed
+      setTimeout(() => {
+        appState.selectImage(newImage);
+        console.log('Selected new image');
+      }, 50);
+    } catch (err: any) {
+      console.error('Image generation failed:', err);
+      // Remove placeholder on failure
+      appState.images.value = appState.images.value.filter(img => img.id !== placeholderId);
+      alert(`Failed to generate image: ${err.message}`);
+    } finally {
+      appState.generating.value = false;
+    }
   }
 
   render() {
@@ -55,8 +103,20 @@ export class MyElement extends LitElement {
       </div>
 
       <div class="card">
-        <prompt-assistant @generate=${this._handleGenerate}></prompt-assistant>
-        <image-gallery></image-gallery>
+        <md-tabs @change=${(e: any) => this.activeTab = e.target.activeTabIndex}>
+          <md-primary-tab ?active=${this.activeTab === 0}>Gallery</md-primary-tab>
+          <md-primary-tab ?active=${this.activeTab === 1}>AI Assistant</md-primary-tab>
+        </md-tabs>
+
+        <div class="tab-content">
+          <div ?hidden=${this.activeTab !== 0}>
+            <image-gallery></image-gallery>
+          </div>
+          <div ?hidden=${this.activeTab !== 1}>
+            <prompt-assistant @generate=${this._handleGenerate}></prompt-assistant>
+          </div>
+        </div>
+
         <vector-preview></vector-preview>
       </div>
     `
@@ -84,22 +144,22 @@ export class MyElement extends LitElement {
     .card {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.5rem;
       padding: 2rem;
       border-radius: 24px;
       background-color: var(--md-sys-color-surface-container);
       color: var(--md-sys-color-on-surface-variant);
       box-shadow: var(--md-sys-elevation-level1);
     }
+    .tab-content {
+      margin-top: 0.5rem;
+    }
     p {
       color: var(--md-sys-color-on-surface-variant);
       line-height: 1.5;
     }
-    .read-the-docs {
-      margin-top: 2rem;
-      color: var(--md-sys-color-outline);
-      text-align: center;
-      font-size: 0.875rem;
+    md-tabs {
+      --md-tabs-container-color: transparent;
     }
   `
 }

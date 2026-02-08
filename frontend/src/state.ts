@@ -5,6 +5,7 @@ export interface GeneratedImage {
   id: string;
   url: string;
   prompt: string;
+  loading?: boolean;
 }
 
 export const appState = {
@@ -14,22 +15,30 @@ export const appState = {
   images: signal<GeneratedImage[]>([
     {
       id: 'sample-1',
-      url: '/samples/gemini_20260207192859_0.png',
+      url: 'samples/gemini_20260207192859_0.png',
       prompt: 'Sample Monstera Leaf'
     },
     {
       id: 'sample-2',
-      url: '/samples/gemini_20260207195614_1.png',
+      url: 'samples/gemini_20260207195614_1.png',
       prompt: 'Art Deco Cat'
     },
     {
       id: 'sample-3',
-      url: '/samples/gemini_20260207195622_1.png',
+      url: 'samples/gemini_20260207195622_1.png',
       prompt: 'Geometric Mandala'
     }
   ]),
   selectedImage: signal<GeneratedImage | null>(null),
   
+  tracingSettings: signal({
+    threshold: 128,
+    turdSize: 10,
+    smoothing: 1.0,
+    hierarchical: true,
+    mode: 'cnc' as 'cnc' | 'graphic'
+  }),
+
   init: async () => {
     if (!appState.wasmInitialized.value) {
       await initWasm();

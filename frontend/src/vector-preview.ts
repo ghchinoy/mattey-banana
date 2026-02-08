@@ -2,17 +2,16 @@ import { LitElement, html, css, svg } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { effect } from '@preact/signals-core';
 import { appState } from './state';
-import { trace_to_json, export_to_fletcher_dxf, export_to_svg } from './wasm/matte_wasm.js';
+import { trace_to_json, export_to_fletcher_dxf, trace_to_svg } from './wasm/matte_wasm.js';
 import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
+import '@material/web/select/outlined-select.js';
+import '@material/web/select/select-option.js';
 
 @customElement('vector-preview')
 export class VectorPreview extends LitElement {
   @state()
   private paths: [number, number][][] = [];
-
-  @state()
-  private threshold = 128;
 
   @state()
   private format: 'dxf' | 'svg' = 'dxf';
@@ -31,7 +30,14 @@ export class VectorPreview extends LitElement {
     try {
       const resp = await fetch(url);
       const bytes = await resp.arrayBuffer();
-      const json = trace_to_json(new Uint8Array(bytes), this.threshold);
+      const settings = appState.tracingSettings.value;
+      const json = trace_to_json(
+        new Uint8Array(bytes), 
+        settings.threshold,
+        settings.turdSize,
+        settings.smoothing,
+        settings.mode === 'graphic'
+      );
       this.paths = JSON.parse(json);
     } catch (e) {
       console.error('Tracing failed', e);
@@ -39,19 +45,30 @@ export class VectorPreview extends LitElement {
   }
 
   private async _handleDownload() {
-    if (this.paths.length === 0) return;
+    const selected = appState.selectedImage.value;
+    if (!selected || this.paths.length === 0) return;
     
     let content: string;
     let filename: string;
     let type: string;
+
+    const settings = appState.tracingSettings.value;
 
     if (this.format === 'dxf') {
       content = export_to_fletcher_dxf(JSON.stringify(this.paths));
       filename = 'design.dxf';
       type = 'application/dxf';
     } else {
-      // Assuming 1024x1024 for now
-      content = export_to_svg(JSON.stringify(this.paths), 1024, 1024);
+      // For SVG, we use the direct trace_to_svg for maximum quality (Béziers)
+      const resp = await fetch(selected.url);
+      const bytes = await resp.arrayBuffer();
+      content = trace_to_svg(
+        new Uint8Array(bytes),
+        settings.threshold,
+        settings.turdSize,
+        settings.smoothing,
+        settings.mode === 'graphic'
+      );
       filename = 'design.svg';
       type = 'image/svg+xml';
     }
@@ -70,6 +87,8 @@ export class VectorPreview extends LitElement {
       return html`<p class="empty-state">Select an image to preview vectors</p>`;
     }
 
+    const settings = appState.tracingSettings.value;
+
     return html`
       <div class="preview-container">
         <h3>Vector Preview</h3>
@@ -83,9 +102,49 @@ export class VectorPreview extends LitElement {
         </div>
         
         <div class="controls">
-          <label>Threshold (Detail): ${this.threshold}</label>
-          <input type="range" min="0" max="255" .value=${this.threshold} 
-                 @input=${(e: any) => { this.threshold = parseInt(e.target.value); this._updatePreview(appState.selectedImage.value!.url); }}>
+          <div class="control-group">
+            <md-outlined-select label="Trace Mode" 
+              @change=${(e: any) => {
+                appState.tracingSettings.value = { ...settings, mode: e.target.value };
+                this._updatePreview(appState.selectedImage.value!.url);
+              }}>
+              <md-select-option value="cnc" ?selected=${settings.mode === 'cnc'}>
+                <div slot="headline">CNC (Polylines)</div>
+                <div slot="supporting-text">Straight lines only, high vertex count.</div>
+              </md-select-option>
+              <md-select-option value="graphic" ?selected=${settings.mode === 'graphic'}>
+                <div slot="headline">Graphic (Splines)</div>
+                <div slot="supporting-text">Smooth Bézier curves, smaller file size.</div>
+              </md-select-option>
+            </md-outlined-select>
+          </div>
+
+          <div class="control-group">
+            <label>Threshold (Detail): ${settings.threshold}</label>
+            <input type="range" min="0" max="255" .value=${settings.threshold} 
+                   @input=${(e: any) => { 
+                     appState.tracingSettings.value = { ...settings, threshold: parseInt(e.target.value) };
+                     this._updatePreview(appState.selectedImage.value!.url); 
+                   }}>
+          </div>
+
+          <div class="control-group">
+            <label>Filter Noise (Turd Size): ${settings.turdSize}</label>
+            <input type="range" min="0" max="100" .value=${settings.turdSize} 
+                   @input=${(e: any) => { 
+                     appState.tracingSettings.value = { ...settings, turdSize: parseInt(e.target.value) };
+                     this._updatePreview(appState.selectedImage.value!.url); 
+                   }}>
+          </div>
+
+          <div class="control-group">
+            <label>Smoothing: ${settings.smoothing.toFixed(1)}</label>
+            <input type="range" min="0" max="10" step="0.5" .value=${settings.smoothing} 
+                   @input=${(e: any) => { 
+                     appState.tracingSettings.value = { ...settings, smoothing: parseFloat(e.target.value) };
+                     this._updatePreview(appState.selectedImage.value!.url); 
+                   }}>
+          </div>
           
           <div class="format-selection">
             <md-tabs @change=${(e: any) => this.format = e.target.activeTabIndex === 0 ? 'dxf' : 'svg'}>
@@ -133,9 +192,15 @@ export class VectorPreview extends LitElement {
     .controls {
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 1rem;
+    }
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
     }
     .format-selection {
+      margin-top: 1rem;
       margin-bottom: 0.5rem;
     }
     md-filled-button {
@@ -144,6 +209,7 @@ export class VectorPreview extends LitElement {
     label {
       font-weight: 500;
       color: var(--md-sys-color-on-surface);
+      font-size: 0.9rem;
     }
     input[type="range"] {
       width: 100%;
