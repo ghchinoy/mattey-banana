@@ -4,21 +4,40 @@ import '@material/web/textfield/outlined-text-field.js';
 import '@material/web/chips/chip-set.js';
 import '@material/web/chips/filter-chip.js';
 import '@material/web/button/filled-button.js';
+import '@material/web/icon/icon.js';
 
 import { effect } from '@preact/signals-core';
 import { appState } from './state';
 import '@material/web/progress/linear-progress.js';
+import { getApiKey, saveApiKey } from './db';
 
 @customElement('prompt-assistant')
 export class PromptAssistant extends LitElement {
   @state()
   private prompt = '';
 
+  @state()
+  private apiKey = '';
+
+  @state()
+  private showKey = false;
+
   constructor() {
     super();
+    this._loadApiKey();
     effect(() => {
       this.requestUpdate();
     });
+  }
+
+  private async _loadApiKey() {
+    const savedKey = await getApiKey();
+    if (savedKey) this.apiKey = savedKey;
+  }
+
+  private async _handleKeyInput(e: any) {
+    this.apiKey = e.target.value;
+    await saveApiKey(this.apiKey);
   }
   
   private templates = [
@@ -36,6 +55,21 @@ export class PromptAssistant extends LitElement {
 
     return html`
       <div class="assistant">
+        <div class="api-key-config">
+          <md-outlined-text-field
+            label="Gemini API Key"
+            .type=${this.showKey ? 'text' : 'password'}
+            .value=${this.apiKey}
+            @input=${this._handleKeyInput}
+            supporting-text="Saved to your browser's IndexedDB"
+          >
+            <md-icon slot="leading-icon">key</md-icon>
+            <md-icon-button slot="trailing-icon" @click=${() => this.showKey = !this.showKey} toggle>
+              <md-icon>${this.showKey ? 'visibility_off' : 'visibility'}</md-icon>
+            </md-icon-button>
+          </md-outlined-text-field>
+        </div>
+
         <h3>Prompt Assistant</h3>
         
         <md-linear-progress .indeterminate=${isGenerating} ?hidden=${!isGenerating}></md-linear-progress>
@@ -56,7 +90,7 @@ export class PromptAssistant extends LitElement {
         ></md-outlined-text-field>
 
         <md-filled-button 
-          ?disabled=${isGenerating || !this.prompt} 
+          ?disabled=${isGenerating || !this.prompt || !this.apiKey} 
           @click=${this._onGenerate}>
           ${isGenerating ? 'Generating...' : 'Generate Image'}
         </md-filled-button>
@@ -66,7 +100,10 @@ export class PromptAssistant extends LitElement {
 
   private _onGenerate() {
     this.dispatchEvent(new CustomEvent('generate', {
-      detail: { prompt: this.prompt },
+      detail: { 
+        prompt: this.prompt,
+        apiKey: this.apiKey
+      },
       bubbles: true,
       composed: true
     }));
@@ -81,6 +118,11 @@ export class PromptAssistant extends LitElement {
       border: 1px solid var(--md-sys-color-outline-variant);
       border-radius: 12px;
       background: var(--md-sys-color-surface-container-low);
+    }
+    .api-key-config {
+      margin-bottom: 1rem;
+      border-bottom: 1px solid var(--md-sys-color-outline-variant);
+      padding-bottom: 1rem;
     }
     md-outlined-text-field {
       width: 100%;

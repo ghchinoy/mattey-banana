@@ -46,6 +46,13 @@ Mattey Banana is a specialized web application designed to bridge the gap betwee
     npm run dev
     ```
 
+## 🌐 Deployment
+
+This project is configured for **GitHub Pages**. Any push to the `main` branch will trigger a GitHub Action that:
+1.  Compiles the Rust WASM module in `--release` mode.
+2.  Packages the Lit frontend.
+3.  Deploys the optimized assets to the project's GitHub Pages site.
+
 ## 🎨 Example Pipeline
 
 | Stage | Output |

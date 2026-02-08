@@ -1,11 +1,14 @@
 import { LitElement, css, html } from 'lit'
-import { customElement, property } from 'lit/decorators.js'
+import { customElement, property, state } from 'lit/decorators.js'
 import { effect } from '@preact/signals-core'
 import { appState } from './state'
+import { getUserImages } from './db'
 
 import './prompt-assistant'
 import './image-gallery'
 import './vector-preview'
+import '@material/web/tabs/tabs.js'
+import '@material/web/tabs/primary-tab.js'
 
 /**
  * An example element.
@@ -15,12 +18,23 @@ import './vector-preview'
  */
 @customElement('my-element')
 export class MyElement extends LitElement {
+  @state()
+  private activeTab = 0;
+
   constructor() {
     super();
-    appState.init();
+    this._init();
     effect(() => {
       this.requestUpdate();
     });
+  }
+
+  private async _init() {
+    await appState.init();
+    const userImages = await getUserImages();
+    if (userImages && userImages.length > 0) {
+      userImages.forEach(img => appState.addImage(img));
+    }
   }
 
   /**
@@ -40,11 +54,12 @@ export class MyElement extends LitElement {
 
     appState.addImage({
       id: Date.now().toString(),
-      url: '/samples/gemini_20260207192859_0.png',
+      url: 'samples/gemini_20260207192859_0.png',
       prompt: prompt
     });
 
     appState.generating.value = false;
+    this.activeTab = 0; // Switch back to gallery
   }
 
   render() {
@@ -55,8 +70,20 @@ export class MyElement extends LitElement {
       </div>
 
       <div class="card">
-        <prompt-assistant @generate=${this._handleGenerate}></prompt-assistant>
-        <image-gallery></image-gallery>
+        <md-tabs @change=${(e: any) => this.activeTab = e.target.activeTabIndex}>
+          <md-primary-tab ?active=${this.activeTab === 0}>Gallery</md-primary-tab>
+          <md-primary-tab ?active=${this.activeTab === 1}>AI Assistant</md-primary-tab>
+        </md-tabs>
+
+        <div class="tab-content">
+          <div ?hidden=${this.activeTab !== 0}>
+            <image-gallery></image-gallery>
+          </div>
+          <div ?hidden=${this.activeTab !== 1}>
+            <prompt-assistant @generate=${this._handleGenerate}></prompt-assistant>
+          </div>
+        </div>
+
         <vector-preview></vector-preview>
       </div>
     `
@@ -84,24 +111,30 @@ export class MyElement extends LitElement {
     .card {
       display: flex;
       flex-direction: column;
-      gap: 2rem;
+      gap: 1.5rem;
       padding: 2rem;
       border-radius: 24px;
       background-color: var(--md-sys-color-surface-container);
       color: var(--md-sys-color-on-surface-variant);
       box-shadow: var(--md-sys-elevation-level1);
     }
+    .tab-content {
+      margin-top: 0.5rem;
+    }
     p {
       color: var(--md-sys-color-on-surface-variant);
       line-height: 1.5;
     }
-    .read-the-docs {
-      margin-top: 2rem;
-      color: var(--md-sys-color-outline);
-      text-align: center;
-      font-size: 0.875rem;
+    md-tabs {
+      --md-tabs-container-color: transparent;
     }
   `
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'my-element': MyElement
+  }
 }
 
 declare global {

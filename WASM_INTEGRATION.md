@@ -10,6 +10,14 @@ This document describes how to build, integrate, and extend the Rust-based WASM 
   - Current version: `0.2.106`
   - Check with: `wasm-bindgen --version`
 
+## CI/CD Deployment
+
+The project includes a GitHub Actions workflow (`.github/workflows/deploy.yml`) that automates the WASM build process. On every push to `main`, the workflow:
+1.  Detects the `wasm-bindgen` version from `Cargo.lock`.
+2.  Builds the Rust code with `--release`.
+3.  Runs `wasm-bindgen` to generate the JS glue code.
+4.  Builds the frontend and deploys to GitHub Pages.
+
 ## Build Pipeline
 
 The WASM module is located in the `/wasm` directory. To build and package it for the frontend:

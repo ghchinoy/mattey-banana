@@ -1,0 +1,85 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Get wasm-bindgen version
+        id: wasm-bindgen-version
+        run: |
+          VERSION=$(grep -A 1 "name = "wasm-bindgen"" wasm/Cargo.lock | grep "version =" | head -n 1 | cut -d '"' -f 2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Detected wasm-bindgen version: $VERSION"
+
+      - name: Cache wasm-bindgen
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/wasm-bindgen
+          key: ${{ runner.os }}-wasm-bindgen-${{ steps.wasm-bindgen-version.outputs.version }}
+
+      - name: Install wasm-bindgen-cli
+        run: |
+          VERSION=${{ steps.wasm-bindgen-version.outputs.version }}
+          if ! command -v wasm-bindgen &> /dev/null || [[ "$(wasm-bindgen --version)" != "wasm-bindgen $VERSION" ]]; then
+            cargo install wasm-bindgen-cli --version $VERSION
+          fi
+
+      - name: Build WASM
+        working-directory: ./wasm
+        run: |
+          cargo build --target wasm32-unknown-unknown --release
+          wasm-bindgen target/wasm32-unknown-unknown/release/matte_wasm.wasm --out-dir ../frontend/src/wasm --target web
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: |
+          npm install
+          npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './frontend/dist'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

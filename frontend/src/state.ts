@@ -14,17 +14,17 @@ export const appState = {
   images: signal<GeneratedImage[]>([
     {
       id: 'sample-1',
-      url: '/samples/gemini_20260207192859_0.png',
+      url: 'samples/gemini_20260207192859_0.png',
       prompt: 'Sample Monstera Leaf'
     },
     {
       id: 'sample-2',
-      url: '/samples/gemini_20260207195614_1.png',
+      url: 'samples/gemini_20260207195614_1.png',
       prompt: 'Art Deco Cat'
     },
     {
       id: 'sample-3',
-      url: '/samples/gemini_20260207195622_1.png',
+      url: 'samples/gemini_20260207195622_1.png',
       prompt: 'Geometric Mandala'
     }
   ]),
