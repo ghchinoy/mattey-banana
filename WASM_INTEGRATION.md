@@ -24,7 +24,7 @@ The WASM module is located in the `/wasm` directory. To build and package it for
 
 ```bash
 cd wasm
-cargo build --target wasm32-unknown-unknown
+cargo build -p matte-wasm --target wasm32-unknown-unknown
 wasm-bindgen target/wasm32-unknown-unknown/debug/matte_wasm.wasm --out-dir ../frontend/src/wasm --target web
 ```
 

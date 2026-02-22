@@ -1,0 +1,14 @@
+[package]
+name = "matte-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+image = "0.24"
+dxf = "0.6"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+vtracer = "0.6"
+visioncortex = "0.8"
+kurbo = "0.9"
+roxmltree = "0.18.1"

@@ -49,7 +49,7 @@ jobs:
       - name: Build WASM
         working-directory: ./wasm
         run: |
-          cargo build --target wasm32-unknown-unknown --release
+          cargo build -p matte-wasm --target wasm32-unknown-unknown --release
           wasm-bindgen target/wasm32-unknown-unknown/release/matte_wasm.wasm --out-dir ../frontend/src/wasm --target web
 
       - name: Setup Node

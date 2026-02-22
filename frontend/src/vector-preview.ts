@@ -2,16 +2,21 @@ import { LitElement, html, css, svg } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { effect } from '@preact/signals-core';
 import { appState } from './state';
-import { trace_to_json, export_to_fletcher_dxf, trace_to_svg } from './wasm/matte_wasm.js';
+import { trace_to_json, export_to_fletcher_dxf, export_to_svg } from './wasm/matte_wasm.js';
 import '@material/web/tabs/tabs.js';
 import '@material/web/tabs/primary-tab.js';
 import '@material/web/select/outlined-select.js';
 import '@material/web/select/select-option.js';
 
+interface PathIsland {
+  id: string;
+  svg_path_data: string;
+}
+
 @customElement('vector-preview')
 export class VectorPreview extends LitElement {
   @state()
-  private paths: [number, number][][] = [];
+  private islands: PathIsland[] = [];
 
   @state()
   private format: 'dxf' | 'svg' = 'dxf';
@@ -38,7 +43,7 @@ export class VectorPreview extends LitElement {
         settings.smoothing,
         settings.mode === 'graphic'
       );
-      this.paths = JSON.parse(json);
+      this.islands = JSON.parse(json);
     } catch (e) {
       console.error('Tracing failed', e);
     }
@@ -46,29 +51,18 @@ export class VectorPreview extends LitElement {
 
   private async _handleDownload() {
     const selected = appState.selectedImage.value;
-    if (!selected || this.paths.length === 0) return;
+    if (!selected || this.islands.length === 0) return;
     
     let content: string;
     let filename: string;
     let type: string;
 
-    const settings = appState.tracingSettings.value;
-
     if (this.format === 'dxf') {
-      content = export_to_fletcher_dxf(JSON.stringify(this.paths));
+      content = export_to_fletcher_dxf(JSON.stringify(this.islands));
       filename = 'design.dxf';
       type = 'application/dxf';
     } else {
-      // For SVG, we use the direct trace_to_svg for maximum quality (Béziers)
-      const resp = await fetch(selected.url);
-      const bytes = await resp.arrayBuffer();
-      content = trace_to_svg(
-        new Uint8Array(bytes),
-        settings.threshold,
-        settings.turdSize,
-        settings.smoothing,
-        settings.mode === 'graphic'
-      );
+      content = export_to_svg(JSON.stringify(this.islands), 1024, 1024);
       filename = 'design.svg';
       type = 'image/svg+xml';
     }
@@ -94,9 +88,9 @@ export class VectorPreview extends LitElement {
         <h3>Vector Preview</h3>
         <div class="svg-frame">
           <svg viewBox="0 0 1024 1024">
-            ${this.paths.map(path => svg`
-              <polyline points="${path.map(p => p.join(',')).join(' ')}" 
-                        fill="none" stroke="black" stroke-width="2" />
+            ${this.islands.map(island => svg`
+              <path id="${island.id}" d="${island.svg_path_data}" 
+                    fill="none" stroke="black" stroke-width="2" />
             `)}
           </svg>
         </div>

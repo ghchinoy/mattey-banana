@@ -1,22 +1,7 @@
-[package]
-name = "matte-wasm"
-version = "0.1.0"
-edition = "2021"
-
-[lib]
-crate-type = ["cdylib", "rlib"]
-
-[dependencies]
-wasm-bindgen = "=0.2.106"
-image = "0.24"
-dxf = "0.6"
-vsvg = "0.1"
- # checking version
-serde = { version = "1.0", features = ["derive"] }
-serde_json = "1.0"
-serde-wasm-bindgen = "0.6"
-vtracer = "0.6"
-visioncortex = "0.8"
-kurbo = "0.9"
-getrandom = { version = "0.2", features = ["js"] }
-uuid = { version = "1.2", features = ["v4", "js"] }
+[workspace]
+members = [
+    "matte-core",
+    "matte-wasm",
+    "matte-cli"
+]
+resolver = "2"

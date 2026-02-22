@@ -13,9 +13,10 @@ Mattey Banana is a specialized web application designed to bridge the gap betwee
 -   **Rust-Powered WASM Engine:** High-performance `vtracer` (visioncortex) engine providing high-fidelity tracing with support for both polygons and Bézier splines.
 -   **Contour Hierarchy:** Advanced path discovery that correctly identifies and handles internal holes and nested shapes.
 -   **Path Simplification & Denoising:** Adjustable noise filtering ("turd" removal) and path smoothing to ensure clean, efficient vectors.
--   **CNC Optimized:** Generates `LwPolyline` DXF files with manageable vertex counts, ideal for legacy Windows 98-era plotters like the Fletcher-Terry F-6100.
--   **Real-time Preview:** Adjust threshold, noise, and smoothing settings with instant visual feedback.
--   **Dual Format Export:** Download designs as high-fidelity **SVG** (with splines) or optimized **DXF** (flattened polylines).
+-   **Dual Tracing Modes:** 
+    -   **CNC Optimized:** Generates dense `LwPolyline` DXF files ideal for legacy Windows 98-era plotters like the Fletcher-Terry F-6100.
+    -   **Web / AI Optimized:** Generates semantic, low-complexity SVGs built with true Cubic Bézier (`C`) splines, perfect for animation tools like **MorphLab**.
+-   **Real-time Preview:** Adjust threshold, noise, smoothing, and trace mode settings with instant visual feedback right in the browser.
 
 ## 🛠 Tech Stack
 
@@ -24,6 +25,22 @@ Mattey Banana is a specialized web application designed to bridge the gap betwee
 -   **Persistence:** [idb](https://github.com/jakearchibald/idb) (IndexedDB wrapper)
 -   **Backend (Core Logic):** [Rust](https://www.rust-lang.org/) compiled to [WebAssembly](https://webassembly.org/)
 -   **AI:** Gemini Nano Banana Pro (Image Generation)
+
+## ⚠️ Is this tool right for you? (The CNC Overhead)
+
+Mattey Banana is a **hybrid** tool built to solve a specific problem: bridging modern generative AI with legacy CNC plotters (like the Fletcher-Terry F-6100). 
+
+Because legacy hardware requires dense, flattened polylines (`DXF` format) instead of modern Bézier curves, this application carries architectural overhead. The Rust/WASM core includes mathematical libraries to perform on-the-fly curve flattening and intermediate representation (IR) parsing.
+
+**If your ONLY goal is to convert PNGs to SVGs for the web:**
+This project is likely over-engineered for your needs. The requirement to compile Rust to WebAssembly (`wasm-bindgen`) adds complexity to the build process. 
+
+Instead of this WASM approach, you might want to consider **pure JavaScript alternatives** (such as [imagetracerjs](https://github.com/jankovicsandras/imagetracerjs) or JS ports of `potrace`). Pure JS solutions:
+- Require zero build steps (no `cargo`, no WASM toolchain).
+- Can be dropped directly into any web project.
+- Are perfectly adequate for standard web SVG generation.
+
+*However*, if you need blisteringly fast tracing, high-fidelity Bézier splines (via the `vtracer` engine), or need to drive physical CNC hardware, Mattey Banana's Rust engine is exactly what you're looking for!
 
 ## 📦 Getting Started
 
