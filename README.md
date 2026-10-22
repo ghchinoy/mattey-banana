@@ -15,7 +15,7 @@ Mattey Banana is a specialized web application designed to bridge the gap betwee
 -   **Path Simplification & Denoising:** Adjustable noise filtering ("turd" removal) and path smoothing to ensure clean, efficient vectors.
 -   **Dual Tracing Modes:** 
     -   **CNC Optimized:** Generates dense `LwPolyline` DXF files ideal for legacy Windows 98-era plotters like the Fletcher-Terry F-6100.
-    -   **Web / AI Optimized:** Generates semantic, low-complexity SVGs built with true Cubic Bézier (`C`) splines, perfect for animation tools like **MorphLab**.
+    -   **Web / AI Optimized:** Generates semantic, low-complexity SVGs built with true Cubic Bézier (`C`) splines, perfect for animation tools like **[MorphLab](https://github.com/ghchinoy/morphlab)**.
 -   **Real-time Preview:** Adjust threshold, noise, smoothing, and trace mode settings with instant visual feedback right in the browser.
 
 ## 🛠 Tech Stack
